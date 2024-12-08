@@ -5,12 +5,19 @@
 #include <time.h>
 
 // var declarations
-char grid[10][10] = {
-    {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-    {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-    {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-    {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-    {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}
+enum Space { Hit = 'O', Miss = 'X', Forfeit = 'i', Unknown = ' ' };
+
+enum Space grid[10][10] = {
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
+    {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
 };
 int targets[17][2] = {
     {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1},
@@ -19,6 +26,7 @@ int targets[17][2] = {
 int targets_counter = 0;
 int shotsFired = 0;
 int hits = 0;
+
 
 //flags
 int doneShooting = 0;
@@ -67,7 +75,8 @@ rngDir:
             goto case2;
         case 3:
             goto case3;
-        default: // should never happen bc this will only happen if the rng result is 4 which is almost impossible unless the rng gave almost the maximum value possible
+        default:
+            // should never happen bc this will only happen if the rng result is 4 which is almost impossible unless the rng gave almost the maximum value possible
             goto case0;
     }
 
@@ -94,7 +103,6 @@ case0CheckEmptySpaceLoop:
     if (rng[0] == targets[i][0] && temp == targets[i][1]) {
         nope = 1;
     }
-    // printf("rngX:%i listX:%i rngY:%i listY:%i nope:%i i:%i\n", rng[0], targets[i][0], temp, targets[i][1], nope, i);
     temp++;
     j++;
     goto case0CheckEmptySpaceLoop;
@@ -105,16 +113,13 @@ case0CheckEmptySpaceLoopEnd:
 
 case0OccupiedSpaceLoopEnd:
     if (nope) {
-        //printf("hi");
-        goto dirEnd; //CHECK IF THIS REBOOTS THE WHILE LOOP
+        goto dirEnd;
     }
-    // printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
     i = 0;
 case0ApplyShipLoop:
     if (i >= size) {
         goto case0ApplyShipLoopEnd;
     }
-    //grid[rng[0]][rng[1]] = 'O';
     targets[targets_counter][0] = rng[0];
     targets[targets_counter][1] = rng[1];
     targets_counter++;
@@ -161,7 +166,6 @@ case1CheckEmptySpaceLoopEnd:
 
 case1OccupiedSpaceLoopEnd:
     if (nope) {
-
         goto dirEnd;
     }
 
@@ -216,7 +220,6 @@ case2CheckEmptySpaceLoopEnd:
 
 case2OccupiedSpaceLoopEnd:
     if (nope) {
-
         goto dirEnd;
     }
     i = 0;
@@ -271,7 +274,6 @@ case3CheckEmptySpaceLoopEnd:
 
 case3OccupiedSpaceLoopEnd:
     if (nope) {
-
         goto dirEnd;
     }
     i = 0;
@@ -279,7 +281,6 @@ case3ApplyShipLoop:
     if (i >= size) {
         goto case3ApplyShipLoopEnd;
     }
-    //grid[rng[0]][rng[1]] = 'O';
     targets[targets_counter][0] = rng[0];
     targets[targets_counter][1] = rng[1];
     targets_counter++;
@@ -422,11 +423,12 @@ horizontalArrowLoopEnd:
     // size is 3 becasue thats the length the game ever has to read
     // effectively 2 size because the last slot lives the null terminator
     char input[3] = "-1";
-    printf("Misses: X\tHits: O\nShots fired: %i\nPlease select from the following:\n1. shoot\n2. forfeit\n",
-           shotsFired);
+    printf("Misses: %c\tHits: %c\nShots fired: %i\nPlease select from the following:\n1. shoot\n2. forfeit\n",
+           Miss, Hit, shotsFired);
     fflush(stdin); // empty stdin before using it or it may contain junk
     fgets(input, sizeof(input), stdin);
-    if (strcmp(input, "1\n") == 0) { // yes the enter key is also read, i loooooooovvvvvveeeeee C
+    if (strcmp(input, "1\n") == 0) {
+        // yes the enter key is also read, i loooooooovvvvvveeeeee C
         goto menuInput1;
     } else if (strcmp(input, "2\n") == 0) {
         goto menuInput2;
@@ -507,7 +509,7 @@ checkColumnInputEnd:
 selectingColumnEnd:
     doneConfirm = 0;
 confirming:
-    if (!(!doneConfirm)) {
+    if (doneConfirm) {
         goto confirmingEnd;
     }
     goto printBoard;
@@ -535,13 +537,13 @@ checkIfHitLoop:
     if (!(targets[i][0] == chosenRow && targets[i][1] == chosenColumn)) {
         goto miss;
     }
-    grid[chosenRow][chosenColumn] = 'O';
+    grid[chosenRow][chosenColumn] = Hit;
     hits++;
     shotsFired++;
     goto confirmSwitchEnd;
 
 miss:
-    grid[chosenRow][chosenColumn] = 'X';
+    grid[chosenRow][chosenColumn] = Miss;
 
     i++;
     goto checkIfHitLoop;
@@ -603,8 +605,8 @@ markingShipLocationsLoop:
     if (i >= 17) {
         goto markingShipLocationsLoopEnd;
     }
-    if (grid[targets[i][0]][targets[i][1]] != 'O') {
-        grid[targets[i][0]][targets[i][1]] = 'i';
+    if (grid[targets[i][0]][targets[i][1]] != Hit) {
+        grid[targets[i][0]][targets[i][1]] = Forfeit;
     }
 
     i++;
