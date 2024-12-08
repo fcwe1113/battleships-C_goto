@@ -7,6 +7,12 @@
 // var declarations
 enum Space { Hit = 'O', Miss = 'X', Forfeit = 'i', Unknown = ' ' };
 
+struct ship {
+    int x;
+    int y;
+    int length;
+};
+
 enum Space grid[10][10] = {
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
@@ -19,10 +25,9 @@ enum Space grid[10][10] = {
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
 };
-int targets[17][2] = {
-    {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1},
-    {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}
-};
+int lengths[5] = {2, 3, 3, 4, 5};
+struct ship ships[sizeof(lengths) / sizeof(lengths[0])];
+
 int targets_counter = 0;
 int shotsFired = 0;
 int hits = 0;
@@ -41,11 +46,28 @@ int secondThreeLong = 0;
 int main(void) {
     printf("loading...\n");
 
+    //initialize the targets array size to total ship lengths
+    int sumOfLengths = 0;
+    int i = 0;
+lengthSumLoop:
+    if (i >= sizeof(lengths) / sizeof(lengths[0])) {
+        goto lengthSumLoopEnd;
+    }
+
+    sumOfLengths += lengths[i];
+
+    i++;
+    goto lengthSumLoop;
+
+lengthSumLoopEnd:
+
+    int targets[sumOfLengths][2];
+
     // previously rngships()
     // used for ship generation
-    int size = 2;
+    i = 0;
 rngShips:
-    if (size > 5) {
+    if (i >= sizeof(lengths) / sizeof(lengths[0])) {
         goto rngShipsEnd;
     }
     int done = 0;
@@ -82,49 +104,49 @@ rngDir:
 
     // right facing ship
 case0:
-    if ((rng[1] + size - 1) >= 9) {
+    if ((rng[1] + lengths[i] - 1) >= 9) {
         goto case0OutOfBounds;
     }
     int nope = 0;
     int temp = rng[1];
-    int i = 0;
+    int j = 0;
 case0OccupiedSpaceLoop:
-    if (!(i <= targets_counter && !nope)) {
+    if (!(j <= targets_counter && !nope)) {
         goto case0OccupiedSpaceLoopEnd;
     }
     //loop thru each occupied square
     temp = rng[1];
-    int j = 0;
+    int k = 0;
 case0CheckEmptySpaceLoop:
-    if (j >= size) {
+    if (k >= lengths[i]) {
         goto case0CheckEmptySpaceLoopEnd;
     }
     //loop thru each square the new ship would take up
-    if (rng[0] == targets[i][0] && temp == targets[i][1]) {
+    if (rng[0] == targets[j][0] && temp == targets[j][1]) {
         nope = 1;
     }
     temp++;
-    j++;
+    k++;
     goto case0CheckEmptySpaceLoop;
 
 case0CheckEmptySpaceLoopEnd:
-    i++;
+    j++;
     goto case0OccupiedSpaceLoop;
 
 case0OccupiedSpaceLoopEnd:
     if (nope) {
         goto dirEnd;
     }
-    i = 0;
+    j = 0;
 case0ApplyShipLoop:
-    if (i >= size) {
+    if (j >= lengths[i]) {
         goto case0ApplyShipLoopEnd;
     }
     targets[targets_counter][0] = rng[0];
     targets[targets_counter][1] = rng[1];
     targets_counter++;
     rng[1]++;
-    i++;
+    j++;
     goto case0ApplyShipLoop;
 
 case0ApplyShipLoopEnd:
@@ -137,31 +159,31 @@ case0OutOfBounds:
 
     // down facing ship
 case1:
-    if ((rng[0] + size - 1) >= 9) {
+    if ((rng[0] + lengths[i] - 1) >= 9) {
         goto case1OutOfBounds;
     }
     nope = 0;
     temp = rng[0];
-    i = 0;
+    j = 0;
 case1OccupiedSpaceLoop:
-    if (!(i <= targets_counter && !nope)) {
+    if (!(j <= targets_counter && !nope)) {
         goto case1OccupiedSpaceLoopEnd;
     }
     temp = rng[0];
-    j = 0;
+    k = 0;
 case1CheckEmptySpaceLoop:
-    if (j >= size) {
+    if (k >= lengths[i]) {
         goto case1CheckEmptySpaceLoopEnd;
     }
-    if (temp == targets[i][0] && rng[1] == targets[i][1]) {
+    if (temp == targets[j][0] && rng[1] == targets[j][1]) {
         nope = 1;
     }
     temp++;
-    j++;
+    k++;
     goto case1CheckEmptySpaceLoop;
 
 case1CheckEmptySpaceLoopEnd:
-    i++;
+    j++;
     goto case1OccupiedSpaceLoop;
 
 case1OccupiedSpaceLoopEnd:
@@ -169,9 +191,9 @@ case1OccupiedSpaceLoopEnd:
         goto dirEnd;
     }
 
-    i = 0;
+    j = 0;
 case1ApplyShipLoop:
-    if (i >= size) {
+    if (j >= lengths[i]) {
         goto case1ApplyShipLoopEnd;
     }
     targets[targets_counter][0] = rng[0];
@@ -179,7 +201,7 @@ case1ApplyShipLoop:
     targets_counter++;
     rng[0]++;
 
-    i++;
+    j++;
     goto case1ApplyShipLoop;
 
 case1ApplyShipLoopEnd:
@@ -191,40 +213,40 @@ case1OutOfBounds:
 
     // left facing ship
 case2:
-    if ((rng[1] - size + 1) <= 0) {
+    if ((rng[1] - lengths[i] + 1) <= 0) {
         goto case2OutOfBounds;
     }
     nope = 0;
     temp = rng[1];
-    i = 0;
+    j = 0;
 case2OccupiedSpaceLoop:
-    if (!(i <= targets_counter && !nope)) {
+    if (!(j <= targets_counter && !nope)) {
         goto case2OccupiedSpaceLoopEnd;
     }
     temp = rng[1];
-    j = 0;
+    k = 0;
 case2CheckEmptySpaceLoop:
-    if (j >= size) {
+    if (k >= lengths[i]) {
         goto case2CheckEmptySpaceLoopEnd;
     }
-    if (rng[0] == targets[i][0] && temp == targets[i][1]) {
+    if (rng[0] == targets[j][0] && temp == targets[j][1]) {
         nope = 1;
     }
     temp--;
-    j++;
+    k++;
     goto case2CheckEmptySpaceLoop;
 
 case2CheckEmptySpaceLoopEnd:
-    i++;
+    j++;
     goto case2OccupiedSpaceLoop;
 
 case2OccupiedSpaceLoopEnd:
     if (nope) {
         goto dirEnd;
     }
-    i = 0;
+    j = 0;
 case2ApplyShipLoop:
-    if (i >= size) {
+    if (j >= lengths[i]) {
         goto case2ApplyShipLoopEnd;
     }
     targets[targets_counter][0] = rng[0];
@@ -232,7 +254,7 @@ case2ApplyShipLoop:
     targets_counter++;
     rng[1]--;
 
-    i++;
+    j++;
     goto case2ApplyShipLoop;
 
 case2ApplyShipLoopEnd:
@@ -245,40 +267,40 @@ case2OutOfBounds:
 
     // up facing ship
 case3:
-    if ((rng[0] - size + 1) <= 0) {
+    if ((rng[0] - lengths[i] + 1) <= 0) {
         goto case3OutOfBounds;
     }
     nope = 0;
     temp = rng[0];
-    i = 0;
+    j = 0;
 case3OccupiedSpaceLoop:
-    if (!(i <= targets_counter && !nope)) {
+    if (!(j <= targets_counter && !nope)) {
         goto case3OccupiedSpaceLoopEnd;
     }
     temp = rng[0];
-    j = 0;
+    k = 0;
 case3CheckEmptySpaceLoop:
-    if (j >= size) {
+    if (k >= lengths[i]) {
         goto case3CheckEmptySpaceLoopEnd;
     }
-    if (temp == targets[i][0] && rng[1] == targets[i][1]) {
+    if (temp == targets[j][0] && rng[1] == targets[j][1]) {
         nope = 1;
     }
     temp--;
-    j++;
+    k++;
     goto case3CheckEmptySpaceLoop;
 
 case3CheckEmptySpaceLoopEnd:
-    i++;
+    j++;
     goto case3OccupiedSpaceLoop;
 
 case3OccupiedSpaceLoopEnd:
     if (nope) {
         goto dirEnd;
     }
-    i = 0;
+    j = 0;
 case3ApplyShipLoop:
-    if (i >= size) {
+    if (j >= lengths[i]) {
         goto case3ApplyShipLoopEnd;
     }
     targets[targets_counter][0] = rng[0];
@@ -286,7 +308,7 @@ case3ApplyShipLoop:
     targets_counter++;
     rng[0]--;
 
-    i++;
+    j++;
     goto case3ApplyShipLoop;
 
 case3ApplyShipLoopEnd:
@@ -300,13 +322,8 @@ dirEnd:
 
 
 rngDirDone:
-    // special condition: if theres only one 3 long ship reduce iterator by 1
-    // and raise the flag showing theres already a 3 long ship
-    if (!secondThreeLong && size == 3) {
-        size--;
-        secondThreeLong = 1;
-    }
-    size++;
+
+    i++;
     goto rngShips;
 
 rngShipsEnd:
@@ -407,7 +424,7 @@ horizontalArrowLoopEnd:
     // to return to the correct line by crafting custom logic to make it return correctly
     // if you want examples of monke code theres no better example than this tbh
     // because I have absolutely 0 idea how does all of this somehow work
-    if (hits == 17) {
+    if (hits == sizeof(lengths) / sizeof(lengths[0])) {
         goto printBoardReturnWin;
     } else if (gameOver) {
         goto printBoardReturnForfeit;
@@ -531,7 +548,7 @@ printBoardReturnConfirming:
 confirmYes:
     i = 0;
 checkIfHitLoop:
-    if (i >= 17) {
+    if (i >= sizeof(lengths)/sizeof(lengths[0])) {
         goto checkIfHitLoopEnd;
     }
     if (!(targets[i][0] == chosenRow && targets[i][1] == chosenColumn)) {
@@ -586,7 +603,7 @@ shootingEnd:
     chosenRow = -1;
     choosingColumn = 0;
     chosenColumn = -1;
-    if (hits == 17) {
+    if (hits == sizeof(lengths)/sizeof(lengths[0])) {
         goto notWin;
     }
     goto printBoard;
@@ -602,7 +619,7 @@ menuInput2:
     gameOver = 1;
     i = 0;
 markingShipLocationsLoop:
-    if (i >= 17) {
+    if (i >= targets_counter) {
         goto markingShipLocationsLoopEnd;
     }
     if (grid[targets[i][0]][targets[i][1]] != Hit) {
