@@ -7,12 +7,6 @@
 // var declarations
 enum Space { Hit = 'O', Miss = 'X', Forfeit = 'i', Unknown = ' ' };
 
-struct ship {
-    int x;
-    int y;
-    int length;
-};
-
 enum Space grid[10][10] = {
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
@@ -26,7 +20,6 @@ enum Space grid[10][10] = {
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
 };
 int lengths[5] = {2, 3, 3, 4, 5};
-struct ship ships[sizeof(lengths) / sizeof(lengths[0])];
 
 int targets_counter = 0;
 int shotsFired = 0;
