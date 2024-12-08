@@ -1,8 +1,10 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+// var declarations
 char grid[10][10] = {
     {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
     {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -15,7 +17,6 @@ int targets[17][2] = {
     {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}
 };
 int targets_counter = 0;
-int seed = 0;
 int shotsFired = 0;
 int hits = 0;
 
@@ -32,28 +33,28 @@ int secondThreeLong = 0;
 int main(void) {
     printf("loading...\n");
 
-    //previously rngships()
+    // previously rngships()
+    // used for ship generation
     int size = 2;
 rngShips:
-    if (!(size <= 5)) {
+    if (size > 5) {
         goto rngShipsEnd;
     }
-    //for (int size = 2; size <= 5; size++) {
     int done = 0;
 rngDir:
     if (done) {
         goto rngDirDone;
     }
-    srand(time(NULL) + (seed * 2));
-    //printf("%i %i\n", rand() % 10, rand() % 10);
+    // get current time in nanoseconds for rng seeding
+    struct timespec tempTime;
+    clock_gettime(CLOCK_REALTIME, &tempTime);
+    srand(tempTime.tv_nsec);
     int rng[] = {rand() % 10, rand() % 10};
-    //printf("%i\n", rand() % 4);
-    srand(time(NULL) + seed);
-    int dir = rand() % 4;
-    //printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
+    clock_gettime(CLOCK_REALTIME, &tempTime);
+    srand(tempTime.tv_nsec);
 
-    //2 long ship
-    switch (dir) {
+    // rng the direction of the ship
+    switch (rand() % 4) {
         //if 0 go right
         //1 go down
         //2 go left
@@ -66,10 +67,13 @@ rngDir:
             goto case2;
         case 3:
             goto case3;
+        default: // should never happen bc this will only happen if the rng result is 4 which is almost impossible unless the rng gave almost the maximum value possible
+            goto case0;
     }
 
+    // right facing ship
 case0:
-    if (!((rng[1] + size - 1) < 9)) {
+    if ((rng[1] + size - 1) >= 9) {
         goto case0OutOfBounds;
     }
     int nope = 0;
@@ -80,11 +84,10 @@ case0OccupiedSpaceLoop:
         goto case0OccupiedSpaceLoopEnd;
     }
     //loop thru each occupied square
-    //printf("%i %i %i %i %i %i\n", rng[0], targets[i][0], temp, targets[i][1], nope, i);
     temp = rng[1];
     int j = 0;
 case0CheckEmptySpaceLoop:
-    if (!(j < size)) {
+    if (j >= size) {
         goto case0CheckEmptySpaceLoopEnd;
     }
     //loop thru each square the new ship would take up
@@ -103,13 +106,12 @@ case0CheckEmptySpaceLoopEnd:
 case0OccupiedSpaceLoopEnd:
     if (nope) {
         //printf("hi");
-        seed++;
         goto dirEnd; //CHECK IF THIS REBOOTS THE WHILE LOOP
     }
     // printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
     i = 0;
 case0ApplyShipLoop:
-    if (!(i < size)) {
+    if (i >= size) {
         goto case0ApplyShipLoopEnd;
     }
     //grid[rng[0]][rng[1]] = 'O';
@@ -122,14 +124,15 @@ case0ApplyShipLoop:
 
 case0ApplyShipLoopEnd:
     done = !done;
-    seed++;
+
 
 case0OutOfBounds:
-    seed++;
 
     goto dirEnd;
+
+    // down facing ship
 case1:
-    if (!((rng[0] + size - 1) < 9)) {
+    if ((rng[0] + size - 1) >= 9) {
         goto case1OutOfBounds;
     }
     nope = 0;
@@ -142,14 +145,12 @@ case1OccupiedSpaceLoop:
     temp = rng[0];
     j = 0;
 case1CheckEmptySpaceLoop:
-    if (!(j < size)) {
+    if (j >= size) {
         goto case1CheckEmptySpaceLoopEnd;
     }
     if (temp == targets[i][0] && rng[1] == targets[i][1]) {
         nope = 1;
     }
-    //temp++;
-    // printf("rngX:%i listX:%i rngY:%i listY:%i nope:%i i:%i\n", temp, targets[i][0], rng[1], targets[i][1], nope, i);
     temp++;
     j++;
     goto case1CheckEmptySpaceLoop;
@@ -160,18 +161,15 @@ case1CheckEmptySpaceLoopEnd:
 
 case1OccupiedSpaceLoopEnd:
     if (nope) {
-        //printf("hi");
-        seed++;
-        goto dirEnd; //CHECK IF THIS REBOOTS THE WHILE LOOP
+
+        goto dirEnd;
     }
-    // printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
 
     i = 0;
 case1ApplyShipLoop:
-    if (!(i < size)) {
+    if (i >= size) {
         goto case1ApplyShipLoopEnd;
     }
-    //grid[rng[0]][rng[1]] = 'O';
     targets[targets_counter][0] = rng[0];
     targets[targets_counter][1] = rng[1];
     targets_counter++;
@@ -182,13 +180,14 @@ case1ApplyShipLoop:
 
 case1ApplyShipLoopEnd:
     done = !done;
-    seed++;
 
 case1OutOfBounds:
-    seed++;
+
     goto dirEnd;
+
+    // left facing ship
 case2:
-    if (!((rng[1] - size + 1) > 0)) {
+    if ((rng[1] - size + 1) <= 0) {
         goto case2OutOfBounds;
     }
     nope = 0;
@@ -198,18 +197,15 @@ case2OccupiedSpaceLoop:
     if (!(i <= targets_counter && !nope)) {
         goto case2OccupiedSpaceLoopEnd;
     }
-    //printf("hi\n");
     temp = rng[1];
     j = 0;
 case2CheckEmptySpaceLoop:
-    if (!(j < size)) {
+    if (j >= size) {
         goto case2CheckEmptySpaceLoopEnd;
     }
     if (rng[0] == targets[i][0] && temp == targets[i][1]) {
         nope = 1;
     }
-    //temp--;
-    // printf("rngX:%i listX:%i rngY:%i listY:%i nope:%i i:%i\n", rng[0], targets[i][0], temp, targets[i][1], nope, i);
     temp--;
     j++;
     goto case2CheckEmptySpaceLoop;
@@ -220,17 +216,14 @@ case2CheckEmptySpaceLoopEnd:
 
 case2OccupiedSpaceLoopEnd:
     if (nope) {
-        //printf("hi");
-        seed++;
-        goto dirEnd; //CHECK IF THIS REBOOTS THE WHILE LOOP
+
+        goto dirEnd;
     }
-    // printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
     i = 0;
 case2ApplyShipLoop:
-    if (!(i < size)) {
+    if (i >= size) {
         goto case2ApplyShipLoopEnd;
     }
-    //grid[rng[0]][rng[1]] = 'O';
     targets[targets_counter][0] = rng[0];
     targets[targets_counter][1] = rng[1];
     targets_counter++;
@@ -241,13 +234,15 @@ case2ApplyShipLoop:
 
 case2ApplyShipLoopEnd:
     done = !done;
-    seed++;
+
 
 case2OutOfBounds:
-    seed++;
+
     goto dirEnd;
+
+    // up facing ship
 case3:
-    if (!((rng[0] - size + 1) > 0)) {
+    if ((rng[0] - size + 1) <= 0) {
         goto case3OutOfBounds;
     }
     nope = 0;
@@ -260,15 +255,12 @@ case3OccupiedSpaceLoop:
     temp = rng[0];
     j = 0;
 case3CheckEmptySpaceLoop:
-    if (!(j < size)) {
+    if (j >= size) {
         goto case3CheckEmptySpaceLoopEnd;
     }
     if (temp == targets[i][0] && rng[1] == targets[i][1]) {
         nope = 1;
     }
-    //temp--;
-    //printf("rngX:%i listX:%i rngY:%i listY:%i nope:%i i:%i\n", temp, targets[i][0], rng[1], targets[i][1], nope, i);
-
     temp--;
     j++;
     goto case3CheckEmptySpaceLoop;
@@ -279,14 +271,12 @@ case3CheckEmptySpaceLoopEnd:
 
 case3OccupiedSpaceLoopEnd:
     if (nope) {
-        //printf("hi");
-        seed++;
-        goto dirEnd; //CHECK IF THIS REBOOTS THE WHILE LOOP
+
+        goto dirEnd;
     }
-    // printf("%i %i %i %i\n", rng[0], rng[1], dir, size);
     i = 0;
 case3ApplyShipLoop:
-    if (!(i < size)) {
+    if (i >= size) {
         goto case3ApplyShipLoopEnd;
     }
     //grid[rng[0]][rng[1]] = 'O';
@@ -300,52 +290,38 @@ case3ApplyShipLoop:
 
 case3ApplyShipLoopEnd:
     done = !done;
-    seed++;
+
 
 case3OutOfBounds:
-    seed++;
-    //goto dirEnd;
+
 dirEnd:
-    //}
-    //break;
     goto rngDir;
 
+
 rngDirDone:
-    //}
-    //printf("%i\n", size);
+    // special condition: if theres only one 3 long ship reduce iterator by 1
+    // and raise the flag showing theres already a 3 long ship
     if (!secondThreeLong && size == 3) {
         size--;
         secondThreeLong = 1;
     }
-    //}
     size++;
     goto rngShips;
 
 rngShipsEnd:
 
-    // rngShip(2);
-    // rngShip(3);
-    // rngShip(3);
-    // rngShip(4);
-    // rngShip(5);
-
-
+    // at this point the game initializing is done and display the game start msg
     printf(
         "Welcome to battleships!\nIn this game you select a square to shoot\nto see if there is a ship hiding there.\nTry and sink all 5 ships with the lowest shots possible!\n");
 
-
-    // for (int i = 0; i < 17; i++) {
-    //     printf("%i %i\n", targets[i][0], targets[i][1]);
-    //     grid[targets[i][0]][targets[i][1]] = 'O';
-    // }
-    //printf("%i\n", targets_counter);
     int gameOver = 0;
 mainGameLoop:
-    if (!(!gameOver)) {
+    if (gameOver) {
         goto gameEnd;
     }
-    //printBoard();
-    //formerly printBoard()
+
+    // formerly printBoard()
+    // code handling printing the board onto console
 printBoard:
     if (!(choosingColumn || choosingColumn == -1)) {
         goto noColumnArrow;
@@ -353,13 +329,13 @@ printBoard:
     char symbol = '|';
     i = 0;
 verticalArrowLoop:
-    if (!(i < 2)) {
+    if (i >= 2) {
         goto verticalArrowLoopEnd;
     }
     printf("      ");
     j = 0;
 verticalArrowAllColumnsLoop:
-    if (!(j < 10)) {
+    if (j >= 10) {
         goto verticalArrowAllColumnsLoopEnd;
     }
     if (j == chosenColumn || chosenColumn == -1) {
@@ -385,7 +361,7 @@ noColumnArrow:
 
     i = 0;
 horizontalArrowLoop:
-    if (!(i < 10)) {
+    if (i >= 10) {
         goto horizontalArrowLoopEnd;
     }
     char output[50];
@@ -400,12 +376,12 @@ horizontalArrowLoop:
     }
 
 
-    if (!(i == 9)) {
+    if (i != 9) {
         goto horizontalArrowNotOn10;;
     }
     j = 3;
 horizontalArrowOffsetFor10Loop:
-    if (!(j < sizeof(output))) {
+    if (j >= sizeof(output)) {
         goto horizontalArrowOffsetFor10LoopEnd;
     }
     output[j] = output[j + 1];
@@ -424,7 +400,12 @@ horizontalArrowNotOn10:
 
 horizontalArrowLoopEnd:
     printf("       -----------------------------------------\n");
-    //end of printBoard
+    // end of printBoard
+    // personally the worst part of the progrma here
+    // because C doesnt save the return line when you goto you have
+    // to return to the correct line by crafting custom logic to make it return correctly
+    // if you want examples of monke code theres no better example than this tbh
+    // because I have absolutely 0 idea how does all of this somehow work
     if (hits == 17) {
         goto printBoardReturnWin;
     } else if (gameOver) {
@@ -437,34 +418,31 @@ horizontalArrowLoopEnd:
         goto printBoardReturnRow;
     }
 
+    // array for saving user input in menu
+    // size is 3 becasue thats the length the game ever has to read
+    // effectively 2 size because the last slot lives the null terminator
     char input[3] = "-1";
     printf("Misses: X\tHits: O\nShots fired: %i\nPlease select from the following:\n1. shoot\n2. forfeit\n",
            shotsFired);
-    fflush(stdin);
+    fflush(stdin); // empty stdin before using it or it may contain junk
     fgets(input, sizeof(input), stdin);
-    //printf("%s, %i\n", input, input == "1");
-    //printf("%i\n", input);
-    //printf("%i\n", input);
-    if (strcmp(input, "1\n") == 0) {
+    if (strcmp(input, "1\n") == 0) { // yes the enter key is also read, i loooooooovvvvvveeeeee C
         goto menuInput1;
     } else if (strcmp(input, "2\n") == 0) {
         goto menuInput2;
     } else {
         goto invalidMenuInput;
     }
-    // switch (input) {
-    //     case "1"://shoot
 
 menuInput1:
-    fflush(stdin);
     doneShooting = 0;
 shooting:
-    if (!(!doneShooting)) {
+    if (doneShooting) {
         goto shootingEnd;
     }
     doneConfirm = 1;
 selectingRow:
-    if (!(!doneSelecting)) {
+    if (doneSelecting) {
         goto selectingRowEnd;
     }
     choosingRow = 1;
@@ -481,121 +459,77 @@ printBoardReturnRow:
               input, "10") == 0)) {
         goto rowInvalid;
     }
-    // switch (input) {
-    //     case "1":
-    //     case "2":
-    //     case "3":
-    //     case "4":
-    //     case "5":
-    //     case "6":
-    //     case "7":
-    //     case "8":
-    //     case "9":
-    //     case "10":
     chosenRow = atoi(input) - 1;
     doneSelecting = 1;
     choosingRow = -1;
     goto checkRowInputEnd;
 
 rowInvalid:
-    //printf("%i\n", chosenRow);
-    // break;
-
-    // default:
     printf("Please select a valid row number!\n");
-    // break;
 
 checkRowInputEnd:
     goto selectingRow;
 
 selectingRowEnd:
-    fflush(stdin);
-
 
     doneSelecting = 0;
+
 selectingColumn:
-    if (!(!doneSelecting)) {
+    if (doneSelecting) {
         goto selectingColumnEnd;
     }
     choosingColumn = 1;
     chosenColumn = -1;
-    //printf("%i", choosingRow);
     goto printBoard;
 printBoardReturnColumn:
 
     printf("Please select the column number to shoot:\n");
     fflush(stdin);
     fgets(input, sizeof(input), stdin);
-    //input = fgetc(stdin) - 48;
     if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
           strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
           strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
               input, "10") == 0)) {
         goto invalidColumn;
     }
-    // switch (input) {
-    //     case "1":
-    //     case "2":
-    //     case "3":
-    //     case "4":
-    //     case "5":
-    //     case "6":
-    //     case "7":
-    //     case "8":
-    //     case "9":
-    //     case "10":
 
     chosenColumn = atoi(input) - 1;
-    //printf("%i", doneConfirm);
     doneSelecting = 1;
     choosingColumn = -1;
     goto checkColumnInputEnd;
 
 invalidColumn:
-    //printf("%i\n", chosenRow);
-    // break;
-
-    // default:
     printf("Please select a valid column number!\n");
-    // break;
 
 checkColumnInputEnd:
     goto selectingColumn;
 
 selectingColumnEnd:
-    fflush(stdin);
-
-
-    //printf("%i %i\n", choosingColumn, chosenColumn);
     doneConfirm = 0;
 confirming:
     if (!(!doneConfirm)) {
         goto confirmingEnd;
     }
-    //printf("hi");
     goto printBoard;
 printBoardReturnConfirming:
 
     printf("You sure you want to shoot there?(Y/N)\n");
     fflush(stdin);
-    input[0] = fgetc(stdin);
+    input[0] = tolower(fgetc(stdin));
     switch (input[0]) {
         case 'y':
-        case 'Y':
             goto confirmYes;
 
-        case 'N':
         case 'n':
             goto confirmNo;
         default:
             goto invalidConfirm;
     }
 
-    //printf("yes");
 confirmYes:
     i = 0;
 checkIfHitLoop:
-    if (!(i < 17)) {
+    if (i >= 17) {
         goto checkIfHitLoopEnd;
     }
     if (!(targets[i][0] == chosenRow && targets[i][1] == chosenColumn)) {
@@ -609,7 +543,6 @@ checkIfHitLoop:
 miss:
     grid[chosenRow][chosenColumn] = 'X';
 
-
     i++;
     goto checkIfHitLoop;
 
@@ -622,11 +555,9 @@ checkIfHitLoopEnd:
     goto confirmSwitchEnd;
 
 confirmNo:
-    //printf("no");
     goto confirmSwitchEnd;
 
 invalidConfirm:
-    //printf("lol");
     printf("invalid input!\n");
 
 confirmSwitchEnd:
@@ -637,7 +568,6 @@ confirmSwitchEnd:
     chosenRow = 0;
     choosingColumn = 0;
     chosenColumn = 0;
-    fflush(stdin);
     goto confirming;
 
 confirmingEnd:
@@ -665,18 +595,16 @@ printBoardReturnWin:
 notWin:
     goto mainMenuInputEnd;
 
-    // break;
-    // case 2://forfeit
+    // the forfeit option
 menuInput2:
     gameOver = 1;
     i = 0;
 markingShipLocationsLoop:
-    if (!(i < 17)) {
+    if (i >= 17) {
         goto markingShipLocationsLoopEnd;
     }
     if (grid[targets[i][0]][targets[i][1]] != 'O') {
         grid[targets[i][0]][targets[i][1]] = 'i';
-        //printf("%i %i\n", targets[i][0], targets[i][1]);
     }
 
     i++;
@@ -687,13 +615,9 @@ markingShipLocationsLoopEnd:
 printBoardReturnForfeit:
     printf("you lost!");
     goto mainMenuInputEnd;
-    //show end board with ship locations here
 
 invalidMenuInput:
     printf("invalid input!\n");
-    // goto mainMenuInputEnd;
-
-    // break;
 mainMenuInputEnd:
     goto mainGameLoop;
 
