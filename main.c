@@ -1,11 +1,15 @@
 #include <ctype.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 // var declarations
-enum Space { Hit = 'O', Miss = 'X', Forfeit = 'i', Unknown = ' ' };
+
+// because by default c only support ASCII targeting enum dont get ⌖
+// and im not going to redo half my code just so i can fit ⌖ into my fking strings
+enum Space { Hit = 'O', Miss = 'X', Forfeit = 'i', Unknown = ' ', Targeting = '+' };
 
 enum Space grid[10][10] = {
     {Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown, Unknown},
@@ -30,7 +34,7 @@ int hits = 0;
 int doneShooting = 0;
 int doneSelecting = 0;
 int doneConfirm = 1;
-int choosingRow = 0;
+int choosingTarget = 0;
 int chosenRow = -1;
 int choosingColumn = 0;
 int chosenColumn = -1;
@@ -38,6 +42,8 @@ int secondThreeLong = 0;
 
 int main(void) {
     printf("loading...\n");
+    setlocale(LC_ALL, "");
+    printf("%lc\n", Targeting);
 
     //initialize the targets array size to total ship lengths
     int sumOfLengths = 0;
@@ -334,61 +340,61 @@ mainGameLoop:
     // formerly printBoard()
     // code handling printing the board onto console
 printBoard:
-    if (!(choosingColumn || choosingColumn == -1)) {
-        goto noColumnArrow;
-    }
-    char symbol = '|';
-    i = 0;
-verticalArrowLoop:
-    if (i >= 2) {
-        goto verticalArrowLoopEnd;
-    }
-    printf("      ");
-    j = 0;
-verticalArrowAllColumnsLoop:
-    if (j >= 10) {
-        goto verticalArrowAllColumnsLoopEnd;
-    }
-    if (j == chosenColumn || chosenColumn == -1) {
-        printf("   %c", symbol);
-    } else {
-        printf("    ");
-    }
-
-    j++;
-    goto verticalArrowAllColumnsLoop;
-
-verticalArrowAllColumnsLoopEnd:
-    symbol = 'v';
-    printf("\n");
-
-    i++;
-    goto verticalArrowLoop;
-
-verticalArrowLoopEnd:
-
-noColumnArrow:
+//     if (!(choosingColumn || choosingColumn == -1)) {
+//         goto noColumnArrow;
+//     }
+//     char symbol = '|';
+//     i = 0;
+// verticalArrowLoop:
+//     if (i >= 2) {
+//         goto verticalArrowLoopEnd;
+//     }
+//     printf("      ");
+//     j = 0;
+// verticalArrowAllColumnsLoop:
+//     if (j >= 10) {
+//         goto verticalArrowAllColumnsLoopEnd;
+//     }
+//     if (j == chosenColumn || chosenColumn == -1) {
+//         printf("   %c", symbol);
+//     } else {
+//         printf("    ");
+//     }
+//
+//     j++;
+//     goto verticalArrowAllColumnsLoop;
+//
+// verticalArrowAllColumnsLoopEnd:
+//     symbol = 'v';
+//     printf("\n");
+//
+//     i++;
+//     goto verticalArrowLoop;
+//
+// verticalArrowLoopEnd:
+//
+// noColumnArrow:
     printf("         1   2   3   4   5   6   7   8   9   10\n");
 
     i = 0;
 horizontalArrowLoop:
-    if (i >= 10) {
-        goto horizontalArrowLoopEnd;
-    }
+     if (i >= 10) {
+         goto horizontalArrowLoopEnd;
+     }
     char output[50];
     snprintf(output, sizeof(output), "     %i | %c | %c | %c | %c | %c | %c | %c | %c | %c | %c |", (i + 1),
              grid[i][0], grid[i][1], grid[i][2], grid[i][3], grid[i][4], grid[i][5], grid[i][6], grid[i][7],
              grid[i][8], grid[i][9]);
 
-    if ((choosingRow || choosingRow == -1) && (i == chosenRow || chosenRow == -1)) {
-        output[0] = '-';
-        output[1] = '-';
-        output[2] = '>';
-    }
+    // if ((choosingTarget || choosingTarget == -1) && (i == chosenRow || chosenRow == -1)) {
+    //     output[0] = '-';
+    //     output[1] = '-';
+    //     output[2] = '>';
+    // }
 
 
     if (i != 9) {
-        goto horizontalArrowNotOn10;;
+        goto horizontalArrowNotOn10;
     }
     j = 3;
 horizontalArrowOffsetFor10Loop:
@@ -400,19 +406,19 @@ horizontalArrowOffsetFor10Loop:
     goto horizontalArrowOffsetFor10Loop;
 
 horizontalArrowOffsetFor10LoopEnd:
-
+//
 horizontalArrowNotOn10:
 
-    printf("       -----------------------------------------\n");
-    printf("%s\n", output);
-
-    i++;
-    goto horizontalArrowLoop;
-
+     printf("       -----------------------------------------\n");
+     printf("%s\n", output);
+//
+     i++;
+     goto horizontalArrowLoop;
+//
 horizontalArrowLoopEnd:
     printf("       -----------------------------------------\n");
     // end of printBoard
-    // personally the worst part of the progrma here
+    // personally the worst part of the program here
     // because C doesnt save the return line when you goto you have
     // to return to the correct line by crafting custom logic to make it return correctly
     // if you want examples of monke code theres no better example than this tbh
@@ -423,16 +429,16 @@ horizontalArrowLoopEnd:
         goto printBoardReturnForfeit;
     } else if (!doneConfirm) {
         goto printBoardReturnConfirming;
-    } else if (choosingColumn) {
-        goto printBoardReturnColumn;
-    } else if (choosingRow) {
-        goto printBoardReturnRow;
+    // } else if (choosingColumn) {
+    //     goto printBoardReturnColumn;
+    } else if (choosingTarget) {
+        goto printBoardReturnTarget;
     }
 
     // array for saving user input in menu
-    // size is 3 becasue thats the length the game ever has to read
-    // effectively 2 size because the last slot lives the null terminator
-    char input[3] = "-1";
+    // size is 6 becasue thats the length the game ever has to read (10,10\0)
+    // effectively 5 size because the last slot lives the null terminator
+    char input[6] = "-1";
     printf("Misses: %c\tHits: %c\nShots fired: %i\nPlease select from the following:\n1. shoot\n2. forfeit\n",
            Miss, Hit, shotsFired);
     fflush(stdin); // empty stdin before using it or it may contain junk
@@ -453,71 +459,117 @@ shooting:
         goto shootingEnd;
     }
     doneConfirm = 1;
-selectingRow:
+selectingTarget:
     if (doneSelecting) {
-        goto selectingRowEnd;
+        goto selectingTargetEnd;
     }
-    choosingRow = 1;
+    choosingTarget = 1;
     chosenRow = -1;
     goto printBoard;
-printBoardReturnRow:
+printBoardReturnTarget:
 
-    printf("Please select the row number to shoot:\n");
+    printf("Please enter the row and column in the format of : ROW,COLUMN\n");
     fflush(stdin);
     fgets(input, sizeof(input), stdin);
-    if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
-          strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
-          strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
-              input, "10") == 0)) {
-        goto rowInvalid;
+    // count commas
+    int count = 0;
+    for (int i = 0; i <= sizeof(input) / sizeof(input[0]) && input[i] != '\n' && input[i] != '\0'; i++) {
+        if (input[i] == ',') {
+            count++;
+        }
     }
-    chosenRow = atoi(input) - 1;
+
+    if (count == 1) {
+        char inputs[2][3];
+        char *temppp = &inputs[0][0];
+        for (char *tempp = &input[0]; *tempp != '\n' && *tempp != '\0'; tempp++) {
+            if (*tempp == ',') {
+                *temppp = '\0';
+                temppp = &inputs[1][0];
+            } else {
+                *temppp = *tempp;
+                temppp++;
+            }
+
+        }
+        *temppp++ = '\0';
+        //split the 2 strings into 2 vars
+        int row = strtol(inputs[0], &temppp, 10) - 1;
+        if (temppp == inputs[0] || *temppp != '\0') {
+            printf("Please enter a valid row and/or column number\n");
+            // goto error
+        }
+        int col = strtol(inputs[1], &temppp, 10) - 1;
+        if (temppp == inputs[1] || *temppp != '\0') {
+            printf("Please enter a valid row and/or column number\n");
+            // goto error
+        }
+        printf("%d %d\n", row, col);
+        if (row > 9 || col > 9 || row < 0 || col < 0) {
+            printf("Please enter a valid row and/or column number\n");
+            // goto error
+        }
+
+        grid[row][col] = Targeting;
+        doneSelecting = 1;
+
+    } else {
+        // runs if cannot split input into 2 chunks with comma
+        printf("Please enter in the format of : ROW,COLUMN\n");
+        // goto error
+    }
+
+
+    // if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
+    //       strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
+    //       strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
+    //           input, "10") == 0)) {
+    //     goto rowInvalid;
+    // }
+    // chosenRow = atoi(input) - 1;
     doneSelecting = 1;
-    choosingRow = -1;
-    goto checkRowInputEnd;
+    choosingTarget = -1;
+    goto checkTargetInputEnd;
 
-rowInvalid:
-    printf("Please select a valid row number!\n");
+checkTargetInputEnd:
+    goto selectingTarget;
 
-checkRowInputEnd:
-    goto selectingRow;
-
-selectingRowEnd:
+selectingTargetEnd:
 
     doneSelecting = 0;
 
-selectingColumn:
-    if (doneSelecting) {
-        goto selectingColumnEnd;
-    }
-    choosingColumn = 1;
-    chosenColumn = -1;
-    goto printBoard;
-printBoardReturnColumn:
-
-    printf("Please select the column number to shoot:\n");
-    fflush(stdin);
-    fgets(input, sizeof(input), stdin);
-    if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
-          strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
-          strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
-              input, "10") == 0)) {
-        goto invalidColumn;
-    }
-
-    chosenColumn = atoi(input) - 1;
-    doneSelecting = 1;
-    choosingColumn = -1;
-    goto checkColumnInputEnd;
-
-invalidColumn:
-    printf("Please select a valid column number!\n");
-
-checkColumnInputEnd:
-    goto selectingColumn;
-
-selectingColumnEnd:
-    doneConfirm = 0;
+// selectingColumn:
+//     if (doneSelecting) {
+//         goto selectingColumnEnd;
+//     }
+//     choosingColumn = 1;
+//     chosenColumn = -1;
+//     goto printBoard;
+// printBoardReturnColumn:
+//
+//     printf("Please select the column number to shoot:\n");
+//     fflush(stdin);
+//     fgets(input, sizeof(input), stdin);
+//     if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
+//           strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
+//           strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
+//               input, "10") == 0)) {
+//         goto invalidColumn;
+//     }
+//
+//     chosenColumn = atoi(input) - 1;
+//     doneSelecting = 1;
+//     choosingColumn = -1;
+//     goto checkColumnInputEnd;
+//
+// invalidColumn:
+//     printf("Please select a valid column number!\n");
+//
+// checkColumnInputEnd:
+//     goto selectingColumn;
+//
+// selectingColumnEnd:
+     doneConfirm = 0;
 confirming:
     if (doneConfirm) {
         goto confirmingEnd;
@@ -576,7 +628,7 @@ confirmSwitchEnd:
     doneConfirm = 1;
     doneShooting = 0;
     doneSelecting = 0;
-    choosingRow = 0;
+    choosingTarget = 0;
     chosenRow = 0;
     choosingColumn = 0;
     chosenColumn = 0;
@@ -592,7 +644,7 @@ shootingEnd:
     doneShooting = 0;
     doneSelecting = 0;
     doneConfirm = 1;
-    choosingRow = 0;
+    choosingTarget = 0;
     chosenRow = -1;
     choosingColumn = 0;
     chosenColumn = -1;
