@@ -29,15 +29,12 @@ int targets_counter = 0;
 int shotsFired = 0;
 int hits = 0;
 
-
 //flags
 int doneShooting = 0;
 int doneSelecting = 0;
 int doneConfirm = 1;
 int choosingTarget = 0;
-int chosenRow = -1;
 int choosingColumn = 0;
-int chosenColumn = -1;
 int secondThreeLong = 0;
 
 int main(void) {
@@ -259,7 +256,6 @@ case2ApplyShipLoop:
 case2ApplyShipLoopEnd:
     done = !done;
 
-
 case2OutOfBounds:
 
     goto dirEnd;
@@ -313,12 +309,10 @@ case3ApplyShipLoop:
 case3ApplyShipLoopEnd:
     done = !done;
 
-
 case3OutOfBounds:
 
 dirEnd:
     goto rngDir;
-
 
 rngDirDone:
 
@@ -340,58 +334,17 @@ mainGameLoop:
     // formerly printBoard()
     // code handling printing the board onto console
 printBoard:
-//     if (!(choosingColumn || choosingColumn == -1)) {
-//         goto noColumnArrow;
-//     }
-//     char symbol = '|';
-//     i = 0;
-// verticalArrowLoop:
-//     if (i >= 2) {
-//         goto verticalArrowLoopEnd;
-//     }
-//     printf("      ");
-//     j = 0;
-// verticalArrowAllColumnsLoop:
-//     if (j >= 10) {
-//         goto verticalArrowAllColumnsLoopEnd;
-//     }
-//     if (j == chosenColumn || chosenColumn == -1) {
-//         printf("   %c", symbol);
-//     } else {
-//         printf("    ");
-//     }
-//
-//     j++;
-//     goto verticalArrowAllColumnsLoop;
-//
-// verticalArrowAllColumnsLoopEnd:
-//     symbol = 'v';
-//     printf("\n");
-//
-//     i++;
-//     goto verticalArrowLoop;
-//
-// verticalArrowLoopEnd:
-//
-// noColumnArrow:
     printf("         1   2   3   4   5   6   7   8   9   10\n");
 
     i = 0;
 horizontalArrowLoop:
-     if (i >= 10) {
-         goto horizontalArrowLoopEnd;
-     }
+    if (i >= 10) {
+        goto horizontalArrowLoopEnd;
+    }
     char output[50];
     snprintf(output, sizeof(output), "     %i | %c | %c | %c | %c | %c | %c | %c | %c | %c | %c |", (i + 1),
              grid[i][0], grid[i][1], grid[i][2], grid[i][3], grid[i][4], grid[i][5], grid[i][6], grid[i][7],
              grid[i][8], grid[i][9]);
-
-    // if ((choosingTarget || choosingTarget == -1) && (i == chosenRow || chosenRow == -1)) {
-    //     output[0] = '-';
-    //     output[1] = '-';
-    //     output[2] = '>';
-    // }
-
 
     if (i != 9) {
         goto horizontalArrowNotOn10;
@@ -406,15 +359,15 @@ horizontalArrowOffsetFor10Loop:
     goto horizontalArrowOffsetFor10Loop;
 
 horizontalArrowOffsetFor10LoopEnd:
-//
+
 horizontalArrowNotOn10:
 
-     printf("       -----------------------------------------\n");
-     printf("%s\n", output);
-//
-     i++;
-     goto horizontalArrowLoop;
-//
+    printf("       -----------------------------------------\n");
+    printf("%s\n", output);
+
+    i++;
+    goto horizontalArrowLoop;
+
 horizontalArrowLoopEnd:
     printf("       -----------------------------------------\n");
     // end of printBoard
@@ -425,13 +378,14 @@ horizontalArrowLoopEnd:
     // because I have absolutely 0 idea how does all of this somehow work
     if (hits == sizeof(lengths) / sizeof(lengths[0])) {
         goto printBoardReturnWin;
-    } else if (gameOver) {
+    }
+    if (gameOver) {
         goto printBoardReturnForfeit;
-    } else if (!doneConfirm) {
+    }
+    if (!doneConfirm) {
         goto printBoardReturnConfirming;
-    // } else if (choosingColumn) {
-    //     goto printBoardReturnColumn;
-    } else if (choosingTarget) {
+    }
+    if (choosingTarget) {
         goto printBoardReturnTarget;
     }
 
@@ -464,7 +418,6 @@ selectingTarget:
         goto selectingTargetEnd;
     }
     choosingTarget = 1;
-    chosenRow = -1;
     goto printBoard;
 printBoardReturnTarget:
 
@@ -473,63 +426,91 @@ printBoardReturnTarget:
     fgets(input, sizeof(input), stdin);
     // count commas
     int count = 0;
-    for (int i = 0; i <= sizeof(input) / sizeof(input[0]) && input[i] != '\n' && input[i] != '\0'; i++) {
-        if (input[i] == ',') {
-            count++;
-        }
+    i = 0;
+commaCheckLoop:
+    if (!(i <= sizeof(input) / sizeof(input[0]) && input[i] != '\n' && input[i] != '\0')) {
+        goto commaCheckLoopEnd;
     }
+    if (input[i] != ',') {
+        goto skipCommaCount;
+    }
+    count++;
+
+    skipCommaCount:
+    i++;
+    goto commaCheckLoop;
+
+commaCheckLoopEnd:
+
 
     if (count == 1) {
-        char inputs[2][3];
-        char *temppp = &inputs[0][0];
-        for (char *tempp = &input[0]; *tempp != '\n' && *tempp != '\0'; tempp++) {
-            if (*tempp == ',') {
-                *temppp = '\0';
-                temppp = &inputs[1][0];
-            } else {
-                *temppp = *tempp;
-                temppp++;
-            }
-
-        }
-        *temppp++ = '\0';
-        //split the 2 strings into 2 vars
-        int row = strtol(inputs[0], &temppp, 10) - 1;
-        if (temppp == inputs[0] || *temppp != '\0') {
-            printf("Please enter a valid row and/or column number\n");
-            // goto error
-        }
-        int col = strtol(inputs[1], &temppp, 10) - 1;
-        if (temppp == inputs[1] || *temppp != '\0') {
-            printf("Please enter a valid row and/or column number\n");
-            // goto error
-        }
-        printf("%d %d\n", row, col);
-        if (row > 9 || col > 9 || row < 0 || col < 0) {
-            printf("Please enter a valid row and/or column number\n");
-            // goto error
-        }
-
-        grid[row][col] = Targeting;
-        doneSelecting = 1;
-
-    } else {
-        // runs if cannot split input into 2 chunks with comma
-        printf("Please enter in the format of : ROW,COLUMN\n");
-        // goto error
+        goto foundOnlyOneComma;
     }
 
+    // runs if cannot split input into 2 chunks with comma
+    printf("Please enter in the format of : ROW,COLUMN\n");
+    goto checkTargetInputEnd;
 
-    // if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
-    //       strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
-    //       strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
-    //           input, "10") == 0)) {
-    //     goto rowInvalid;
-    // }
-    // chosenRow = atoi(input) - 1;
+    foundOnlyOneComma:
+    char inputs[2][3];
+    char *tempp = &input[0];
+    char *temppp = &inputs[0][0];
+stringCommaSplitLoop:
+    if (!(*tempp != '\n' && *tempp != '\0')) {
+        goto stringCommaSplitLoopEnd;
+    }
+    if (*tempp != ',') {
+        goto ifNotComma;
+    }
+    *temppp = '\0';
+    temppp = &inputs[1][0];
+    goto ifComma;
+
+ifNotComma:
+    *temppp = *tempp;
+    temppp++;
+
+ifComma:
+
+    tempp++;
+    goto stringCommaSplitLoop;
+
+    stringCommaSplitLoopEnd:
+    *temppp++ = '\0';
+    //split the 2 strings into 2 vars
+    int row = strtol(inputs[0], &temppp, 10) - 1;
+    if (!(temppp == inputs[0] || *temppp != '\0')) {
+        goto rowValid;
+    }
+
+    printf("Please enter a valid row and/or column number\n");
+    goto checkTargetInputEnd;
+
+rowValid:
+    int col = strtol(inputs[1], &temppp, 10) - 1;
+    if (!(temppp == inputs[1] || *temppp != '\0')) {
+        goto columnValid;
+    }
+    printf("Please enter a valid row and/or column number\n");
+    goto checkTargetInputEnd;
+
+columnValid:
+    printf("%d %d\n", row, col);
+    if (!(row > 9 || col > 9 || row < 0 || col < 0)) {
+        goto numbersInRange;
+    }
+    printf("Please enter a valid row and/or column number\n");
+    goto checkTargetInputEnd;
+
+
+numbersInRange:
+    enum Space original = grid[row][col];
+    grid[row][col] = Targeting;
+    doneSelecting = 1;
+
+
     doneSelecting = 1;
     choosingTarget = -1;
-    goto checkTargetInputEnd;
 
 checkTargetInputEnd:
     goto selectingTarget;
@@ -538,38 +519,9 @@ selectingTargetEnd:
 
     doneSelecting = 0;
 
-// selectingColumn:
-//     if (doneSelecting) {
-//         goto selectingColumnEnd;
-//     }
-//     choosingColumn = 1;
-//     chosenColumn = -1;
-//     goto printBoard;
-// printBoardReturnColumn:
-//
-//     printf("Please select the column number to shoot:\n");
-//     fflush(stdin);
-//     fgets(input, sizeof(input), stdin);
-//     if (!(strcmp(input, "1\n") == 0 || strcmp(input, "2\n") == 0 || strcmp(input, "3\n") == 0 ||
-//           strcmp(input, "4\n") == 0 || strcmp(input, "5\n") == 0 || strcmp(input, "6\n") == 0 ||
-//           strcmp(input, "7\n") == 0 || strcmp(input, "8\n") == 0 || strcmp(input, "9\n") == 0 || strcmp(
-//               input, "10") == 0)) {
-//         goto invalidColumn;
-//     }
-//
-//     chosenColumn = atoi(input) - 1;
-//     doneSelecting = 1;
-//     choosingColumn = -1;
-//     goto checkColumnInputEnd;
-//
-// invalidColumn:
-//     printf("Please select a valid column number!\n");
-//
-// checkColumnInputEnd:
-//     goto selectingColumn;
-//
-// selectingColumnEnd:
-     doneConfirm = 0;
+
+    doneConfirm = 0;
+
 confirming:
     if (doneConfirm) {
         goto confirmingEnd;
@@ -583,7 +535,6 @@ printBoardReturnConfirming:
     switch (input[0]) {
         case 'y':
             goto confirmYes;
-
         case 'n':
             goto confirmNo;
         default:
@@ -593,19 +544,19 @@ printBoardReturnConfirming:
 confirmYes:
     i = 0;
 checkIfHitLoop:
-    if (i >= sizeof(lengths)/sizeof(lengths[0])) {
+    if (i >= sizeof(lengths) / sizeof(lengths[0])) {
         goto checkIfHitLoopEnd;
     }
-    if (!(targets[i][0] == chosenRow && targets[i][1] == chosenColumn)) {
+    if (!(targets[i][0] == row && targets[i][1] == col)) {
         goto miss;
     }
-    grid[chosenRow][chosenColumn] = Hit;
+    grid[row][col] = Hit;
     hits++;
     shotsFired++;
     goto confirmSwitchEnd;
 
 miss:
-    grid[chosenRow][chosenColumn] = Miss;
+    grid[row][col] = Miss;
 
     i++;
     goto checkIfHitLoop;
@@ -613,12 +564,13 @@ miss:
 checkIfHitLoopEnd:
     doneConfirm = 1;
     doneShooting = 1;
-    chosenRow = -1;
-    chosenColumn = -1;
+    row = -1;
+    col = -1;
     shotsFired++;
     goto confirmSwitchEnd;
 
 confirmNo:
+    grid[row][col] = original;
     goto confirmSwitchEnd;
 
 invalidConfirm:
@@ -629,9 +581,9 @@ confirmSwitchEnd:
     doneShooting = 0;
     doneSelecting = 0;
     choosingTarget = 0;
-    chosenRow = 0;
+    row = 0;
     choosingColumn = 0;
-    chosenColumn = 0;
+    col = 0;
     goto confirming;
 
 confirmingEnd:
@@ -645,10 +597,10 @@ shootingEnd:
     doneSelecting = 0;
     doneConfirm = 1;
     choosingTarget = 0;
-    chosenRow = -1;
+    row = -1;
     choosingColumn = 0;
-    chosenColumn = -1;
-    if (hits == sizeof(lengths)/sizeof(lengths[0])) {
+    col = -1;
+    if (hits == sizeof(lengths) / sizeof(lengths[0])) {
         goto notWin;
     }
     goto printBoard;
