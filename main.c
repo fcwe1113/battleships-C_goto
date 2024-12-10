@@ -39,8 +39,6 @@ int secondThreeLong = 0;
 
 int main(void) {
     printf("loading...\n");
-    setlocale(LC_ALL, "");
-    printf("%lc\n", Targeting);
 
     //initialize the targets array size to total ship lengths
     int sumOfLengths = 0;
@@ -495,7 +493,6 @@ rowValid:
     goto checkTargetInputEnd;
 
 columnValid:
-    printf("%d %d\n", row, col);
     if (!(row > 9 || col > 9 || row < 0 || col < 0)) {
         goto numbersInRange;
     }
