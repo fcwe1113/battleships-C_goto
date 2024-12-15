@@ -499,12 +499,10 @@ columnValid:
     printf("Please enter a valid row and/or column number\n");
     goto checkTargetInputEnd;
 
-
 numbersInRange:
     enum Space original = grid[row][col];
     grid[row][col] = Targeting;
     doneSelecting = 1;
-
 
     doneSelecting = 1;
     choosingTarget = -1;
@@ -515,7 +513,6 @@ checkTargetInputEnd:
 selectingTargetEnd:
 
     doneSelecting = 0;
-
 
     doneConfirm = 0;
 
