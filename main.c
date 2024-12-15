@@ -441,7 +441,6 @@ commaCheckLoop:
 
 commaCheckLoopEnd:
 
-
     if (count == 1) {
         goto foundOnlyOneComma;
     }
