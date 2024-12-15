@@ -398,11 +398,12 @@ horizontalArrowLoopEnd:
     if (strcmp(input, "1\n") == 0) {
         // yes the enter key is also read, i loooooooovvvvvveeeeee C
         goto menuInput1;
-    } else if (strcmp(input, "2\n") == 0) {
-        goto menuInput2;
-    } else {
-        goto invalidMenuInput;
     }
+    if (strcmp(input, "2\n") == 0) {
+        goto menuInput2;
+    }
+    goto invalidMenuInput;
+
 
 menuInput1:
     doneShooting = 0;
@@ -449,7 +450,7 @@ commaCheckLoopEnd:
     printf("Please enter in the format of : ROW,COLUMN\n");
     goto checkTargetInputEnd;
 
-    foundOnlyOneComma:
+foundOnlyOneComma:
     char inputs[2][3];
     char *tempp = &input[0];
     char *temppp = &inputs[0][0];
